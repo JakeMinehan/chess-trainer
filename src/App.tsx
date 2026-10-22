@@ -7,6 +7,7 @@ import { GamePage } from './pages/GamePage'
 import { GamesPage } from './pages/GamesPage'
 import { OpeningsPage } from './pages/OpeningsPage'
 import { PracticePage } from './pages/PracticePage'
+import { PuzzlesPage } from './pages/PuzzlesPage'
 import { RepertoirePage } from './pages/RepertoirePage'
 import { SettingsPage } from './pages/SettingsPage'
 
@@ -29,12 +30,14 @@ export function App() {
   if (section === 'openings' && id) page = <RepertoirePage key={id} id={id} at={extra} />
   else if (section === 'openings') page = <OpeningsPage />
   else if (section === 'practice') page = <PracticePage key={id ?? 'all'} repId={id} />
+  else if (section === 'puzzles') page = <PuzzlesPage />
   else if (section === 'games' && id) page = <GamePage key={id} id={id} />
   else if (section === 'games') page = <GamesPage />
   else if (section === 'settings') page = <SettingsPage />
   else page = <AnalyzePage />
 
-  const tab = tabs.some((t) => t.id === section) ? section : 'analyze'
+  // Puzzles live under the Practice tab.
+  const tab = section === 'puzzles' ? 'practice' : tabs.some((t) => t.id === section) ? section : 'analyze'
 
   return (
     <div className="app">

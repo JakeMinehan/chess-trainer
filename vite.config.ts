@@ -28,8 +28,8 @@ export default defineConfig({
         name: 'Chess Trainer',
         short_name: 'Chess Trainer',
         description: 'Analyse positions and build your own opening repertoire. Works offline.',
-        theme_color: '#161512',
-        background_color: '#161512',
+        theme_color: '#302e2b',
+        background_color: '#302e2b',
         display: 'standalone',
         icons: [
           { src: 'pwa-64x64.png', sizes: '64x64', type: 'image/png' },
@@ -41,7 +41,7 @@ export default defineConfig({
       workbox: {
         // Precache everything, including the Stockfish engine and the openings list,
         // so the whole app works with no connection after the first visit.
-        globPatterns: ['**/*.{js,css,html,svg,png,ico,wasm,json,txt}'],
+        globPatterns: ['**/*.{js,css,html,svg,png,ico,wasm,json,txt,mp3}'],
         maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
       },
     }),

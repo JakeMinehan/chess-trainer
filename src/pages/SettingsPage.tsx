@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 import { Icon } from '../components/Icon'
 import { isInstalled, useInstallPrompt } from '../lib/install'
-import { BOARD_THEMES, PIECE_SETS, setPref, usePrefs } from '../lib/prefs'
+import { BOARD_THEMES, PIECE_SETS, SOUND_SETS, setPref, usePrefs } from '../lib/prefs'
+import { preview } from '../lib/sound'
 import { toast } from '../lib/toast'
 import { checkForUpdate, reloadToUpdate, useUpdateReady } from '../lib/update'
 import { backUpNow, LAST_BACKUP_KEY, parseBackup, repertoirePgn, restoreBackup, saveFile } from '../storage/backup'
@@ -58,6 +59,37 @@ function BoardLook() {
           </button>
         ))}
       </div>
+    </section>
+  )
+}
+
+/** Move sounds: pick a set and hear a preview straight away. */
+function SoundChoice() {
+  const prefs = usePrefs()
+  return (
+    <section className="card">
+      <h2>Sound</h2>
+      <div className="segmented sound-picker" role="radiogroup" aria-label="Move sounds">
+        {SOUND_SETS.map((s) => (
+          <button
+            key={s.id}
+            type="button"
+            role="radio"
+            aria-checked={prefs.sound === s.id}
+            className={prefs.sound === s.id ? 'selected' : ''}
+            onClick={() => {
+              setPref('sound', s.id)
+              if (s.id !== 'off') preview()
+            }}
+          >
+            {s.label}
+          </button>
+        ))}
+      </div>
+      <p className="muted small">
+        Tap a set to hear it. Wood is made by this app; SFX and Piano are free Lichess sets by Enigmahack. No sound on an
+        iPhone? Check the silent switch.
+      </p>
     </section>
   )
 }
@@ -149,6 +181,7 @@ export function SettingsPage() {
       </header>
 
       <BoardLook />
+      <SoundChoice />
 
       <section className="card">
         <h2>Install on your phone</h2>

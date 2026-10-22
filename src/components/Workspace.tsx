@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import type { DrawShape } from 'chessground/draw'
 import type { Key } from 'chessground/types'
 import { useOpening } from '../chess/openings'
-import { legalDests, playMove, playUci, positionInfo, turnOf, type Side } from '../chess/position'
+import { legalDests, nextPly, playMove, playUci, positionInfo, turnOf, type Side } from '../chess/position'
 import {
   addMove,
   countMoves,
@@ -19,6 +19,7 @@ import {
 } from '../chess/tree'
 import type { Mark } from '../chess/review'
 import { useEngine } from '../chess/useEngine'
+import { playMove as playMoveSound } from '../lib/sound'
 import { toast } from '../lib/toast'
 import { Board } from './Board'
 import { EngineLines } from './EngineLines'
@@ -73,6 +74,17 @@ export function Workspace({ root, path, orientation, onChange, onFlip, actions, 
     [bestMove],
   )
   const opening = useOpening(nodes)
+  // Move numbers count from the root position, which may be mid-game (e.g. a puzzle).
+  const startPly = nextPly(root.fen)
+  const plyAt = (depth: number) => startPly + depth - 1
+
+  // Play a sound when stepping one move forward or back (not on big jumps or page loads).
+  const previous = useRef(path)
+  useEffect(() => {
+    const before = previous.current
+    previous.current = path
+    if (Math.abs(before.length - path.length) === 1 && node.uci) playMoveSound(node.san)
+  }, [path, node])
 
   const toggleEngine = () => {
     setEngineOn((on) => {
@@ -103,7 +115,7 @@ export function Workspace({ root, path, orientation, onChange, onFlip, actions, 
     const onThisLine = target.length <= path.length && target.every((uci, i) => path[i] === uci)
     const before = { root, path }
     onChange(deleteAt(root, target), onThisLine ? target.slice(0, -1) : path)
-    const label = moveLabel(doomed.san, target.length, true)
+    const label = moveLabel(doomed.san, plyAt(target.length), true)
     toast(after ? `Deleted ${label} and ${after} move${after === 1 ? '' : 's'} after it` : `Deleted ${label}`, {
       label: 'Undo',
       run: () => onChange(before.root, before.path),
@@ -222,7 +234,7 @@ export function Workspace({ root, path, orientation, onChange, onFlip, actions, 
         <MoveList root={root} path={path} onSelect={go} onMenu={setMenuPath} marks={marks} />
         {path.length > 0 && (
           <label className="note">
-            <span className="muted">Note on {moveLabel(node.san, path.length, true)}</span>
+            <span className="muted">Note on {moveLabel(node.san, plyAt(path.length), true)}</span>
             <textarea
               value={note}
               rows={2}
@@ -235,7 +247,7 @@ export function Workspace({ root, path, orientation, onChange, onFlip, actions, 
       </div>
 
       {menuPath && menuNode && (
-        <Modal title={moveLabel(menuNode.san, menuPath.length, true)} onClose={() => setMenuPath(null)}>
+        <Modal title={moveLabel(menuNode.san, plyAt(menuPath.length), true)} onClose={() => setMenuPath(null)}>
           <div className="menu">
             {menuParent && menuParent.children[0] !== menuNode && (
               <button

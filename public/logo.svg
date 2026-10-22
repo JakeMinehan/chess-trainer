@@ -1,10 +1,16 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-  <rect width="512" height="512" rx="96" fill="#2f5d50"/>
-  <g transform="translate(76 66) scale(8)">
-    <g fill="none" fill-rule="evenodd" stroke="#1d2b26" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M22 10c10.5 1 16.5 8 16 29H15c0-9 10-6.5 8-21" fill="#f4f1ea"/>
-      <path d="M24 18c.38 2.91-5.55 7.37-8 9-3 2-2.82 4.34-5 4-1.042-.94 1.41-3.04 0-3-1 0 .19 1.23-1 2-1 0-4.003 1-4-4 0-2 6-12 6-12s1.89-1.9 2-3.5c-.73-.994-.5-2-.5-3 1-1 3 2.5 3 2.5h2s.78-1.992 2.5-3c1 0 1 3 1 3" fill="#f4f1ea"/>
-      <path d="M9.5 25.5a.5.5 0 1 1-1 0 .5.5 0 1 1 1 0zm5.433-9.75a.5 1.5 30 1 1-.866-.5.5 1.5 30 1 1 .866.5z" fill="#1d2b26"/>
-    </g>
-  </g>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#8bc25a"/>
+      <stop offset="1" stop-color="#4e7f30"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="150%">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="10"/>
+      <feOffset dy="12"/>
+      <feComponentTransfer><feFuncA type="linear" slope="0.35"/></feComponentTransfer>
+      <feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  <rect width="512" height="512" rx="112" fill="url(#bg)"/>
+  <image filter="url(#shadow)" x="56" y="42" width="400" height="400" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHN0eWxlPSJjb2xvci1zY2hlbWU6bGlnaHQgb25seSIgZmlsbC1ydWxlPSJldmVub2RkIiBjbGlwLXJ1bGU9ImV2ZW5vZGQiIGltYWdlLXJlbmRlcmluZz0ib3B0aW1pemVRdWFsaXR5IiBzaGFwZS1yZW5kZXJpbmc9Imdlb21ldHJpY1ByZWNpc2lvbiIgdGV4dC1yZW5kZXJpbmc9Imdlb21ldHJpY1ByZWNpc2lvbiIgdmlld0JveD0iLTEuNSAwIDUwIDUwIj48cGF0aCBmaWxsPSIjZjBmMGYwIiBzdHJva2U9IiMzYzNjM2MiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIHN0cm9rZS13aWR0aD0iMS4yIiBkPSJNMjUuMTkyIDIzLjAxNWMtLjE2NTQgNi45NjcyLTExLjc1OCA1LjIxODktMTEuNTE2IDE4LjEwNGwyMi44Ni4xMTg0Yy0yLjA5NC02LjQ0MiA5LjY5LTI1LjE2LTExLjkzMS0zMi4yNTh2LS4wMDAxcy0yLjQzODEtMi42MDEtNS45NjU1LTIuODIzN2wuMjIyNyAzLjUzNDctNC41NTgzIDQuNTgxNmMtMi42Mjk0IDMuMTQ1NS04LjczNDcgOC4zNzg0LTcuNzUxMyA5LjYxMTEgMy4xMTU4IDUuMzA0MSA2LjMzMDYgNC40MzE2IDYuMzMwNiA0LjQzMTYgNC4yNDE4LTQuNTQzMyA1LjgxOTMtMi4wODk0IDEyLjMwOS01LjI5OTd6Ii8+PHBhdGggZD0iTTE5LjMyIDE0LjY5NGMtLjc3NTcuODYwOS0uNjkwMiAxLjExNTYtLjgxMzcgMi4xNTAzLjgwNTUuMTIzMiAxLjUwNjkuMjM5OCAyLjI0ODYuMDY1NiAyLjM4MDktMS4yNjIuMDc1LTMuNDAyNi0xLjQzNDctMi4yMTYyeiIgb3BhY2l0eT0iLjM1IiBwYWludC1vcmRlcj0iZmlsbCBtYXJrZXJzIHN0cm9rZSIvPjxwYXRoIGQ9Ik05LjE5MTYgMjIuMTY2Yy0uODQ5Ni40MDc4LS45OTg0Ljk2MDgtMS4wNTY1IDEuNDc1NC43Mjg4LjQxODEgMS44NzY1LS4xMjU1IDIuMDQxMi0xLjQzMTZsLS45ODQ2LS4wNDR6IiBvcGFjaXR5PSIuMyIvPjxwYXRoIGZpbGw9IiNmZmYiIGQ9Ik04LjE5MDUgMjUuMTVzLjY1MjUgMS4xMzc0LTEuMTAxOS0xLjY0MWMuNjU5NC0xLjk3NzQgOC4yNjMtOS4wNzk2IDEyLjQzOC0xMy41MzRsLS4xODM2LTMuMDg1N3MxLjA2ODkgMS42OTAxIDEuMjQ3NSAzLjQ2OGMtNC4zODk4IDQuMzktMTIuMjIgMTAuODMzLTEyLjgyNCAxMy4yMTMuMDIzLjY3MzguMjQgMS4wMjc4LjQyMzEgMS41Nzk3eiIvPjxwYXRoIGQ9Ik0xMy4yNiAyOC4yNTdjMi4wMjkxLTMuMzM2NyA4LjM5MTQtMy4yMjM5IDExLjkzMi01LjI0MjQuMzIyOC4xMDI0LjEzMDQgMS4zNjk3LjIzOTggMS4yMy44NDc2LTEuMDkwMyAyLjkyNTktMy4yNzkuODY4NC02Ljg3NDMuNTIxNCA1Ljk1NzUtMTMuNzE4IDUuNTkxMi0xNS44OSAxMC4zMDUtLjIwMDUuNDM1NSAyLjE4MTguNzkzMiAyLjg1LjU4MTh6IiBvcGFjaXR5PSIuMTUiLz48cGF0aCBmaWxsPSIjZmZmIiBkPSJNMjUuOCAyMy43ODFjLTEuMDEzMSA1LjgxMzItOS41NDQ5IDYuMTE2OS0xMC45ODggMTIuNjQxIDIuODMzMi02LjQwNTggMTAuNzYyLTUuNzEzNiAxMC45ODgtMTIuNjQxIi8+PHBhdGggZD0iTTE4LjY0IDYuMTU1NnMzLjA1MS43MzggNC45MDQ1IDMuOTgyNWMyMC40OTkgNy4xNTM2IDcuNjQxMyAyNy45MzcgNS43ODgzIDMxLjA3M2w3LjIwMzQuMDI2Yy0xLjk4NzEtMy4yNDMxIDkuNTQ4Mi0yNS41OTctMTEuOTMxLTMyLjI1OC0xLjc3NTctMS4wNjkxLTIuNzY3Ny0yLjYwOTItNS45NjU1LTIuODIzOHoiIG9wYWNpdHk9Ii4xNSIvPjxwYXRoIGZpbGw9IiNmMGYwZjAiIHN0cm9rZT0iIzNjM2MzYyIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIgc3Ryb2tlLXdpZHRoPSIxLjIiIGQ9Ik0yNSAzNi40NTdzLTkuMTMwOS4wNDgtMTEuNjkxIDEuNjE5MmMtMS43MjczIDEuMDYwMi0yLjEzNDggMy42NTE0LTEuODk5OCA2LjMyMzdoMjcuMTgyYy4yMzUtMi42NzIzLS4xNzI1LTUuMjYzNi0xLjg5OTktNi4zMjM3LTIuNTU5Ny0xLjU3MTEtMTEuNjkxLTEuNjE5Mi0xMS42OTEtMS42MTkyeiIvPjxwYXRoIGZpbGw9IiNmZmYiIGQ9Ik0yNSAzNy4xNDdzLTguNzEyMS0uMTM3My0xMS42MjQgMS42NjU4Yy0uMzY5OC4yMjkxLS42OTkyLjgzOTQtLjk1MzYgMS4zOTAyLjI2MDgtLjMzMTMuNTAyMi0uNjEzLjg4NjctLjg0OSAyLjU1OTgtMS41NzExIDExLjY5MS0xLjYxOTEgMTEuNjkxLTEuNjE5MXM5LjEzMTguMDQ4IDExLjY5MiAxLjYxOTFjLjM5MS4yNC41OTI0LjUzMTYuODU1Ni44NzAxLjAyNi0uMDc2LS40MDg0LTEuMTU3OC0xLjE0MzgtMS41OTYyLTIuNzU1NC0xLjQ5Mi0xMS40MDMtMS40ODA4LTExLjQwMy0xLjQ4MDh6Ii8+PC9zdmc+"/>
 </svg>

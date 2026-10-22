@@ -1,4 +1,5 @@
 import { useEffect, useRef, type PointerEvent, type ReactNode } from 'react'
+import { nextPly } from '../chess/position'
 import { MARK_SYMBOL, type Mark } from '../chess/review'
 import { moveLabel, type MoveNode, type Path } from '../chess/tree'
 
@@ -126,7 +127,8 @@ export function MoveList({ root, path, onSelect, onMenu, marks }: Props) {
     <div className="moves" ref={box}>
       {root.children.length ? (
         <>
-          <div className="move-text">{line(root, [], 1, true, 0)}</div>
+          {/* Boards can start mid-game (e.g. a puzzle), so number moves from the root position. */}
+          <div className="move-text">{line(root, [], nextPly(root.fen), true, 0)}</div>
           <p className="moves-hint">{touch ? 'Press and hold' : 'Right-click'} a move to delete it or make it the main line.</p>
         </>
       ) : (

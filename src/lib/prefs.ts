@@ -15,13 +15,24 @@ export const PIECE_SETS = [
   { id: 'cburnett', label: 'Classic' },
 ] as const
 
+export const SOUND_SETS = [
+  { id: 'wood', label: 'Wood' },
+  { id: 'sfx', label: 'SFX' },
+  { id: 'piano', label: 'Piano' },
+  { id: 'off', label: 'Off' },
+] as const
+
 export interface Prefs {
   board: string
   pieces: string
+  sound: string
+  /** Puzzle filters, remembered between visits. */
+  puzzleTheme: string
+  puzzleMine: boolean
 }
 
 const KEY = 'prefs'
-const defaults: Prefs = { board: 'green', pieces: 'staunty' }
+const defaults: Prefs = { board: 'green', pieces: 'staunty', sound: 'wood', puzzleTheme: 'all', puzzleMine: false }
 
 function load(): Prefs {
   try {
@@ -54,6 +65,11 @@ export function setPref<K extends keyof Prefs>(key: K, value: Prefs[K]) {
   }
   apply()
   listeners.forEach((l) => l())
+}
+
+/** The current preferences, for code outside React (e.g. sounds). */
+export function getPrefs(): Prefs {
+  return prefs
 }
 
 export function usePrefs(): Prefs {

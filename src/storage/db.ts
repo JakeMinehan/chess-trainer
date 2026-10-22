@@ -47,15 +47,28 @@ export interface LineStats {
   last: number
 }
 
+/** Your history with one puzzle. Missed puzzles come back for review (Leitner boxes, like lines). */
+export interface PuzzleStats {
+  id: string
+  attempts: number
+  /** How the first, rated attempt went. */
+  firstResult: 'solved' | 'failed'
+  lastResult: 'solved' | 'failed'
+  last: number
+  box: number
+  due: number
+}
+
 interface Schema extends DBSchema {
   repertoires: { key: string; value: Repertoire }
   meta: { key: string; value: unknown }
   games: { key: string; value: StoredGame }
   practice: { key: string; value: LineStats }
+  puzzleStats: { key: string; value: PuzzleStats }
 }
 
 // Everything is stored on this device in IndexedDB. Nothing is sent anywhere.
-const db = openDB<Schema>('chess-trainer', 2, {
+const db = openDB<Schema>('chess-trainer', 3, {
   upgrade(database, oldVersion) {
     if (oldVersion < 1) {
       database.createObjectStore('repertoires', { keyPath: 'id' })
@@ -65,6 +78,7 @@ const db = openDB<Schema>('chess-trainer', 2, {
       database.createObjectStore('games', { keyPath: 'id' })
       database.createObjectStore('practice', { keyPath: 'key' })
     }
+    if (oldVersion < 3) database.createObjectStore('puzzleStats', { keyPath: 'id' })
   },
   // A newer version of the app (e.g. in another tab) needs to upgrade the
   // database; reload so this tab gets out of its way and picks up the update.
@@ -133,6 +147,14 @@ export async function listLineStats(): Promise<LineStats[]> {
 
 export async function saveLineStats(stats: LineStats): Promise<void> {
   await (await db).put('practice', stats)
+}
+
+export async function listPuzzleStats(): Promise<PuzzleStats[]> {
+  return (await db).getAll('puzzleStats')
+}
+
+export async function savePuzzleStats(stats: PuzzleStats): Promise<void> {
+  await (await db).put('puzzleStats', stats)
 }
 
 export async function getMeta<T>(key: string): Promise<T | undefined> {

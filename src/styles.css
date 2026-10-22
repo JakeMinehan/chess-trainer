@@ -1367,3 +1367,90 @@ input:not([type='radio']):focus {
   font-weight: 600;
   box-shadow: var(--shadow);
 }
+
+.sound-picker {
+  width: 100%;
+  max-width: 420px;
+}
+
+/* ---- Puzzles ---- */
+
+.page-switch a {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 42px;
+  border: 2px solid transparent;
+  border-radius: 10px;
+  background: var(--surface-2);
+  color: var(--text);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.page-switch a.selected {
+  border-color: var(--accent);
+}
+
+.rating-card {
+  align-items: center;
+  text-align: center;
+}
+
+.rating-number {
+  font-size: 2.4rem;
+  font-weight: 800;
+  line-height: 1.1;
+}
+
+.rating-change {
+  margin: 0;
+  font-weight: 800;
+  font-size: 1.1rem;
+}
+
+.rating-change.up {
+  color: var(--accent);
+}
+
+.rating-change.down {
+  color: var(--danger);
+}
+
+.theme-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.chip {
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: var(--surface-2);
+  color: var(--muted);
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+select {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  background: var(--surface-2);
+  color: var(--text);
+  font: inherit;
+  font-size: 16px;
+}
+
+.choice.disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.card .field,
+.card .choice {
+  width: 100%;
+}

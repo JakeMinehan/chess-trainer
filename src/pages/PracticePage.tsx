@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type Dispatch, type SetStateAction } from 'react'
+import { useEffect, useMemo, useRef, useState, type Dispatch, type SetStateAction } from 'react'
 import type { DrawShape } from 'chessground/draw'
 import type { Key } from 'chessground/types'
 import { Board } from '../components/Board'
@@ -8,6 +8,8 @@ import { legalDests, playMove, positionInfo, turnOf } from '../chess/position'
 import { isDue, isMoveBy, linesOf, nextSchedule, pickLine, type Line } from '../chess/practice'
 import { moveLabel, nodesAlong } from '../chess/tree'
 import { navigate } from '../lib/router'
+import { PracticeSwitch } from './PuzzlesPage'
+import { play, playMove as playMoveSound } from '../lib/sound'
 import { listLineStats, listRepertoires, saveLineStats, type LineStats, type Repertoire } from '../storage/db'
 
 interface Session {
@@ -97,6 +99,7 @@ export function PracticePage({ repId }: { repId?: string }) {
       <header className="page-head">
         <h1>Practice</h1>
       </header>
+      <PracticeSwitch current="lines" />
       <p className="muted">
         The app plays the other side. Find your moves all the way to the end of the line. Lines you get wrong come back
         sooner, and lines you know well come back less often.
@@ -174,6 +177,16 @@ function PracticeBoard({ session, setSession, lines, tally, onFinished, onNext, 
     [session.hint, expected],
   )
 
+  // Sounds: each move as it's played, and a buzz when a move is refused.
+  const lastPly = useRef(ply)
+  useEffect(() => {
+    if (ply > lastPly.current && node.uci) playMoveSound(node.san)
+    lastPly.current = ply
+  }, [ply, node])
+  useEffect(() => {
+    if (session.resetKey > 0) play('error')
+  }, [session.resetKey])
+
   // The app plays the other side's moves after a short pause.
   useEffect(() => {
     if (finished || yourTurn) return
@@ -186,6 +199,7 @@ function PracticeBoard({ session, setSession, lines, tally, onFinished, onNext, 
     if (!finished || status === 'done') return
     setSession((s) => s && { ...s, status: 'done' })
     onFinished(session.mistakes === 0)
+    setTimeout(() => play(session.mistakes === 0 ? 'success' : 'notify'), 250)
   }, [finished, status, session.mistakes, setSession, onFinished])
 
   const onMove = (from: Key, to: Key) => {
