@@ -17,6 +17,7 @@ import {
   type MoveNode,
   type Path,
 } from '../chess/tree'
+import type { Mark } from '../chess/review'
 import { useEngine } from '../chess/useEngine'
 import { toast } from '../lib/toast'
 import { Board } from './Board'
@@ -37,6 +38,10 @@ interface Props {
   actions?: ReactNode
   /** Shown under the opening name. */
   notice?: ReactNode
+  /** Review marks for the move list. */
+  marks?: Map<string, Mark>
+  /** Turns the live engine off, e.g. while a game review is using the processor. */
+  engineDisabled?: boolean
 }
 
 function readEnginePref(): boolean {
@@ -48,7 +53,7 @@ function readEnginePref(): boolean {
 }
 
 /** The board, engine, move list and controls, shared by Analyze and the opening editor. */
-export function Workspace({ root, path, orientation, onChange, onFlip, actions, notice }: Props) {
+export function Workspace({ root, path, orientation, onChange, onFlip, actions, notice, marks, engineDisabled }: Props) {
   const nodes = useMemo(() => nodesAlong(root, path), [root, path])
   const node = nodes[nodes.length - 1]
   const parent = nodes.length > 1 ? nodes[nodes.length - 2] : undefined
@@ -58,7 +63,8 @@ export function Workspace({ root, path, orientation, onChange, onFlip, actions, 
   const dests = useMemo(() => (info.result ? new Map<Key, Key[]>() : legalDests(fen)), [fen, info.result])
   const lastMove = useMemo(() => (node.uci ? [node.uci.slice(0, 2), node.uci.slice(2, 4)] as Key[] : undefined), [node.uci])
 
-  const [engineOn, setEngineOn] = useState(readEnginePref)
+  const [enginePref, setEngineOn] = useState(readEnginePref)
+  const engineOn = enginePref && !engineDisabled
   const analysis = useEngine(engineOn && !info.result ? fen : null)
   const best = engineOn ? analysis?.lines[0] : undefined
   const bestMove = best?.pv[0]
@@ -213,7 +219,7 @@ export function Workspace({ root, path, orientation, onChange, onFlip, actions, 
           onPlay={(uci) => play(playUci(fen, uci))}
         />
         {actions && <div className="actions">{actions}</div>}
-        <MoveList root={root} path={path} onSelect={go} onMenu={setMenuPath} />
+        <MoveList root={root} path={path} onSelect={go} onMenu={setMenuPath} marks={marks} />
         {path.length > 0 && (
           <label className="note">
             <span className="muted">Note on {moveLabel(node.san, path.length, true)}</span>

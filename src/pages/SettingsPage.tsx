@@ -3,6 +3,7 @@ import { Icon } from '../components/Icon'
 import { isInstalled, useInstallPrompt } from '../lib/install'
 import { BOARD_THEMES, PIECE_SETS, setPref, usePrefs } from '../lib/prefs'
 import { toast } from '../lib/toast'
+import { checkForUpdate, reloadToUpdate, useUpdateReady } from '../lib/update'
 import { backUpNow, LAST_BACKUP_KEY, parseBackup, repertoirePgn, restoreBackup, saveFile } from '../storage/backup'
 import { getMeta, listRepertoires, requestPersistence } from '../storage/db'
 
@@ -57,6 +58,44 @@ function BoardLook() {
           </button>
         ))}
       </div>
+    </section>
+  )
+}
+
+/** Which version is running, and a manual check for a newer one. */
+function AppVersion() {
+  const ready = useUpdateReady()
+  const [checking, setChecking] = useState(false)
+  const built = new Date(__BUILD_TIME__).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' })
+
+  const check = async () => {
+    setChecking(true)
+    try {
+      const coming = await checkForUpdate()
+      if (!coming) toast(navigator.onLine ? 'You have the latest version' : "You're offline, so the app can't check for updates")
+    } catch {
+      toast("Couldn't check for updates")
+    } finally {
+      setChecking(false)
+    }
+  }
+
+  return (
+    <section className="card">
+      <h2>App version</h2>
+      <p>
+        Built {built}.{' '}
+        <span className="muted">New versions download in the background and wait for you to reload.</span>
+      </p>
+      {ready ? (
+        <button className="btn primary" onClick={reloadToUpdate}>
+          <Icon name="refresh" /> Reload to update
+        </button>
+      ) : (
+        <button className="btn" onClick={check} disabled={checking}>
+          <Icon name="refresh" /> {checking ? 'Checking…' : 'Check for updates'}
+        </button>
+      )}
     </section>
   )
 }
@@ -187,6 +226,8 @@ export function SettingsPage() {
           }}
         />
       </section>
+
+      <AppVersion />
     </div>
   )
 }

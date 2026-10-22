@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Icon } from '../components/Icon'
+import { ImportPgnDialog } from '../components/ImportPgnDialog'
 import { Modal } from '../components/Modal'
 import { OpeningFields } from '../components/OpeningFields'
 import type { Side } from '../chess/position'
@@ -14,6 +15,7 @@ export function OpeningsPage() {
   const [list, setList] = useState<Repertoire[] | null>(null)
   const [lastBackup, setLastBackup] = useState<number | undefined>()
   const [creating, setCreating] = useState(false)
+  const [importing, setImporting] = useState(false)
   const [name, setName] = useState('')
   const [color, setColor] = useState<Side>('white')
 
@@ -35,9 +37,14 @@ export function OpeningsPage() {
     <div className="page">
       <header className="page-head">
         <h1>My openings</h1>
-        <button className="btn primary" onClick={() => setCreating(true)}>
-          <Icon name="plus" /> New
-        </button>
+        <div className="row">
+          <button className="btn" onClick={() => setImporting(true)}>
+            <Icon name="download" /> Import
+          </button>
+          <button className="btn primary" onClick={() => setCreating(true)}>
+            <Icon name="plus" /> New
+          </button>
+        </div>
       </header>
 
       {needsBackup && (
@@ -50,8 +57,8 @@ export function OpeningsPage() {
         <div className="empty">
           <p>No openings yet.</p>
           <p className="muted">
-            Play some moves on the <a href="#/analyze">Analyze</a> board and tap <strong>Save line</strong>, or tap{' '}
-            <strong>New</strong> to start an opening here.
+            Play some moves on the <a href="#/analyze">Analyze</a> board and tap <strong>Save line</strong>, tap{' '}
+            <strong>New</strong> to start an opening here, or <strong>Import</strong> a PGN file.
           </p>
         </div>
       ) : (
@@ -76,6 +83,14 @@ export function OpeningsPage() {
             )
           })}
         </ul>
+      )}
+
+      {importing && (
+        <ImportPgnDialog
+          repertoires={list}
+          onClose={() => setImporting(false)}
+          onImported={(r) => navigate(`/openings/${r.id}`)}
+        />
       )}
 
       {creating && (

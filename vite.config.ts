@@ -15,11 +15,15 @@ export default defineConfig({
   },
   define: {
     __STOCKFISH_VERSION__: JSON.stringify(stockfish.buildVersion ?? stockfish.version),
+    __BUILD_TIME__: JSON.stringify(new Date().toISOString()),
   },
   plugins: [
     react(),
     VitePWA({
-      registerType: 'autoUpdate',
+      // A new version waits until you tap Reload (see src/lib/update.ts), so an
+      // update never interrupts a line you're halfway through.
+      registerType: 'prompt',
+      injectRegister: false,
       manifest: {
         name: 'Chess Trainer',
         short_name: 'Chess Trainer',

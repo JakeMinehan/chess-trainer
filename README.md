@@ -4,10 +4,12 @@ A personal chess opening trainer that runs as an installable web app (PWA) and w
 
 - **Analyze**: move both sides on a free board, with a Stockfish eval bar, the engine's top 3 lines and the opening name. Variations are kept as branches.
 - **Save line**: saves the moves from the start to the current position into one of your openings (or a new one). Moves already saved are reused.
-- **Openings**: browse and edit each opening as a move tree. Add branches and write notes on any move. Press and hold a move (right-click on a computer) to delete it and everything after it, or to make it the main line. Deletes can be undone. Changes save as you go.
+- **Openings**: browse and edit each opening as a move tree. Add branches and write notes on any move. Press and hold a move (right-click on a computer) to delete it and everything after it, or to make it the main line. Deletes can be undone. Changes save as you go. **Import** reads PGN (pasted or from a file, any number of games, with branches and comments) into a new or existing opening.
+- **Practice**: the app picks one of your lines and plays the other side, and you find your moves to the end. Wrong moves are refused and Hint shows an arrow. Lines are scheduled with spaced repetition (Leitner boxes): clean runs push a line further out, and any slip brings it back the same day.
+- **Games**: imports your games from chess.com's public API (username only, no login) and shows where each game left your openings: you went off your line, your opponent played something new, or you reached the end. From a game you can add the opponent's new move to your opening, or run a Stockfish review that marks inaccuracies, mistakes and blunders (Lichess thresholds) with an evaluation graph.
 - **Settings**: board colour (green, brown, blue) and piece set (six sets from Lichess), plus backup. Everything lives on the device (IndexedDB). Back up to a JSON file, restore it (merges, never deletes) or export PGN for Lichess / En Croissant.
 
-Planned next: Practice ("play a random line"), Learn mode with explanations, and chess.com / Lichess game import.
+Planned next: Learn mode with explanations for each move.
 
 ## Running it
 
@@ -43,6 +45,10 @@ Then open the site on the phone and:
 - **Android**: in Chrome, tap ⋮ → Install app.
 
 After the first visit the whole app, the engine and the openings list are cached, so it works with no connection.
+
+**Updates:** the installed app checks for a new version when it's opened or brought back to the front (and hourly while open). A new version downloads in the background, then an **Update ready · Reload** bar appears. Nothing changes until you tap Reload, so an update never interrupts a practice line. Settings → App version shows the build time and has a Check for updates button.
+
+**Home screen icon:** generated from `public/logo.svg` with `npm run icons`. iPhones keep the icon from when the app was installed, so a new icon needs a reinstall there. Back up first, because removing the app also removes its saved openings.
 
 ## How it's put together
 

@@ -14,10 +14,14 @@ interface Props {
   lastMove?: Key[]
   shapes: DrawShape[]
   onMove(from: Key, to: Key): void
+  /** Which side may move. Defaults to the side to move; null locks the board. */
+  movableColor?: Side | null
+  /** Change this to put the pieces back to `fen`, e.g. after a move was refused. */
+  resetKey?: number
 }
 
 /** The Lichess board (Chessground). Pieces can be dragged or tapped. */
-export function Board({ fen, orientation, turn, check, dests, lastMove, shapes, onMove }: Props) {
+export function Board({ fen, orientation, turn, check, dests, lastMove, shapes, onMove, movableColor, resetKey }: Props) {
   const el = useRef<HTMLDivElement>(null)
   const api = useRef<Api | null>(null)
   const onMoveRef = useRef(onMove)
@@ -37,16 +41,17 @@ export function Board({ fen, orientation, turn, check, dests, lastMove, shapes, 
   }, [])
 
   useEffect(() => {
+    const color = movableColor === undefined ? turn : (movableColor ?? undefined)
     api.current?.set({
       fen,
       orientation,
       turnColor: turn,
       check,
       lastMove,
-      movable: { color: turn, dests },
+      movable: { color, dests },
       drawable: { autoShapes: shapes },
     })
-  }, [fen, orientation, turn, check, dests, lastMove, shapes])
+  }, [fen, orientation, turn, check, dests, lastMove, shapes, movableColor, resetKey])
 
   return (
     <div className="board">

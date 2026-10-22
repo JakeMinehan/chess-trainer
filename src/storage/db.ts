@@ -1,6 +1,7 @@
 import { openDB, type DBSchema } from 'idb'
+import type { Score } from '../chess/engine'
 import type { Side } from '../chess/position'
-import { newRoot, type MoveNode } from '../chess/tree'
+import { newRoot, type MoveData, type MoveNode } from '../chess/tree'
 
 export interface Repertoire {
   id: string
@@ -12,16 +13,63 @@ export interface Repertoire {
   updatedAt: number
 }
 
+export interface GamePlayer {
+  name: string
+  rating: number
+}
+
+/** A game imported from chess.com. */
+export interface StoredGame {
+  id: string
+  url: string
+  white: GamePlayer
+  black: GamePlayer
+  myColor: Side
+  result: 'win' | 'loss' | 'draw'
+  timeClass: string
+  endTime: number
+  moves: MoveData[]
+  opening?: { eco: string; name: string }
+  /** Stockfish evaluation of every position, from White's side (moves + 1 entries). */
+  review?: { depth: number; scores: Score[] }
+}
+
+/** How well you know one line, for spaced repetition. */
+export interface LineStats {
+  /** `${repertoireId}|${path}` */
+  key: string
+  /** 0 = still learning; each clean run moves it up a box and spaces reviews further apart. */
+  box: number
+  /** When the line is next due (ms). */
+  due: number
+  passes: number
+  fails: number
+  last: number
+}
+
 interface Schema extends DBSchema {
   repertoires: { key: string; value: Repertoire }
   meta: { key: string; value: unknown }
+  games: { key: string; value: StoredGame }
+  practice: { key: string; value: LineStats }
 }
 
 // Everything is stored on this device in IndexedDB. Nothing is sent anywhere.
-const db = openDB<Schema>('chess-trainer', 1, {
-  upgrade(database) {
-    database.createObjectStore('repertoires', { keyPath: 'id' })
-    database.createObjectStore('meta')
+const db = openDB<Schema>('chess-trainer', 2, {
+  upgrade(database, oldVersion) {
+    if (oldVersion < 1) {
+      database.createObjectStore('repertoires', { keyPath: 'id' })
+      database.createObjectStore('meta')
+    }
+    if (oldVersion < 2) {
+      database.createObjectStore('games', { keyPath: 'id' })
+      database.createObjectStore('practice', { keyPath: 'key' })
+    }
+  },
+  // A newer version of the app (e.g. in another tab) needs to upgrade the
+  // database; reload so this tab gets out of its way and picks up the update.
+  blocking() {
+    location.reload()
   },
 })
 
@@ -50,6 +98,41 @@ export async function saveRepertoire(repertoire: Repertoire): Promise<void> {
 
 export async function deleteRepertoire(id: string): Promise<void> {
   await (await db).delete('repertoires', id)
+}
+
+export async function listGames(): Promise<StoredGame[]> {
+  const all = await (await db).getAll('games')
+  return all.sort((a, b) => b.endTime - a.endTime)
+}
+
+export async function getGame(id: string): Promise<StoredGame | undefined> {
+  return (await db).get('games', id)
+}
+
+export async function saveGame(game: StoredGame): Promise<void> {
+  await (await db).put('games', game)
+}
+
+/** Adds games that aren't stored yet and returns how many were new. Existing games (and their reviews) are kept. */
+export async function addGames(games: StoredGame[]): Promise<number> {
+  const tx = (await db).transaction('games', 'readwrite')
+  let added = 0
+  for (const g of games) {
+    if (!(await tx.store.getKey(g.id))) {
+      await tx.store.put(g)
+      added++
+    }
+  }
+  await tx.done
+  return added
+}
+
+export async function listLineStats(): Promise<LineStats[]> {
+  return (await db).getAll('practice')
+}
+
+export async function saveLineStats(stats: LineStats): Promise<void> {
+  await (await db).put('practice', stats)
 }
 
 export async function getMeta<T>(key: string): Promise<T | undefined> {

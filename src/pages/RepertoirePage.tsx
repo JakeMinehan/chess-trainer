@@ -4,14 +4,15 @@ import { Modal } from '../components/Modal'
 import { OpeningFields } from '../components/OpeningFields'
 import { Workspace } from '../components/Workspace'
 import type { Side } from '../chess/position'
-import { countLines, countMoves, type Path } from '../chess/tree'
+import { countLines, countMoves, validPath, type Path } from '../chess/tree'
 import { navigate } from '../lib/router'
 import { toast } from '../lib/toast'
 import { fileSafe, repertoirePgn, saveFile } from '../storage/backup'
 import { deleteRepertoire, getRepertoire, saveRepertoire, type Repertoire } from '../storage/db'
 
 /** Browse and edit one opening. Every change is saved straight away. */
-export function RepertoirePage({ id }: { id: string }) {
+/** `at` is a comma-separated list of UCI moves to open the opening at. */
+export function RepertoirePage({ id, at }: { id: string; at?: string }) {
   const [rep, setRep] = useState<Repertoire | null | undefined>(undefined)
   const [path, setPath] = useState<Path>([])
   const [orientation, setOrientation] = useState<Side>('white')
@@ -25,9 +26,12 @@ export function RepertoirePage({ id }: { id: string }) {
   useEffect(() => {
     getRepertoire(id).then((r) => {
       setRep(r ?? null)
-      if (r) setOrientation(r.color)
+      if (!r) return
+      setOrientation(r.color)
+      // Links from games and practice open the opening at a particular move.
+      if (at) setPath(validPath(r.root, at.split(',')))
     })
-  }, [id])
+  }, [id, at])
 
   if (rep === undefined) return null
   if (rep === null) {
@@ -91,6 +95,9 @@ export function RepertoirePage({ id }: { id: string }) {
             {lines === 1 ? '' : 's'} · {moves} move{moves === 1 ? '' : 's'}
           </span>
         </div>
+        <a className="icon-btn" href={`#/practice/${rep.id}`} aria-label="Practise this opening" title="Practise">
+          <Icon name="target" />
+        </a>
         <button className="icon-btn" onClick={exportPgn} aria-label="Export as PGN">
           <Icon name="share" />
         </button>

@@ -1,4 +1,5 @@
 import { useEffect, useRef, type PointerEvent, type ReactNode } from 'react'
+import { MARK_SYMBOL, type Mark } from '../chess/review'
 import { moveLabel, type MoveNode, type Path } from '../chess/tree'
 
 interface Props {
@@ -7,6 +8,8 @@ interface Props {
   onSelect(path: Path): void
   /** Opens the options for a move (press and hold on a phone, right-click on a computer). */
   onMenu(path: Path): void
+  /** Review marks (?!, ?, ??) keyed by the move's path joined with spaces. */
+  marks?: Map<string, Mark>
 }
 
 const HOLD_MS = 450
@@ -15,7 +18,7 @@ const HOLD_MS = 450
  * The move tree as text: the main line, with other moves in brackets where
  * they branch off. Tap any move to jump to it.
  */
-export function MoveList({ root, path, onSelect, onMenu }: Props) {
+export function MoveList({ root, path, onSelect, onMenu, marks }: Props) {
   const box = useRef<HTMLDivElement>(null)
   const current = path.join(' ')
   const hold = useRef<{ timer?: ReturnType<typeof setTimeout>; x: number; y: number; opened: boolean }>({
@@ -58,6 +61,7 @@ export function MoveList({ root, path, onSelect, onMenu }: Props) {
 
   const move = (node: MoveNode, nodePath: Path, ply: number, forceNumber: boolean) => {
     const key = nodePath.join(' ')
+    const mark = marks?.get(key)
     return (
       <button
         key={key}
@@ -78,6 +82,7 @@ export function MoveList({ root, path, onSelect, onMenu }: Props) {
         onPointerLeave={cancelHold}
       >
         {moveLabel(node.san, ply, forceNumber)}
+        {mark && <span className={`mark ${mark}`}>{MARK_SYMBOL[mark]}</span>}
       </button>
     )
   }

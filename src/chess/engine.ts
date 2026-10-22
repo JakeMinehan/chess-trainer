@@ -1,13 +1,18 @@
-// Runs Stockfish in a Web Worker and talks to it over UCI. One engine is shared
-// by the whole app so the WASM file is only loaded once.
+// Runs Stockfish in Web Workers and talks to it over UCI. The live engine is
+// shared by the whole app so the WASM file is only loaded once; game reviews
+// use a separate worker so they don't interrupt live analysis.
 
-export interface EngineLine {
+/** A score from White's point of view. */
+export interface Score {
+  /** Centipawns. */
+  cp?: number
+  /** Moves to mate (negative = Black mates). */
+  mate?: number
+}
+
+export interface EngineLine extends Score {
   multipv: number
   depth: number
-  /** Centipawns from White's point of view. */
-  cp?: number
-  /** Moves to mate from White's point of view (negative = Black mates). */
-  mate?: number
   /** The engine's best line, in UCI moves. */
   pv: string[]
 }
@@ -24,8 +29,53 @@ export interface EngineState {
 export const MAX_DEPTH = 20
 const MULTI_PV = 3
 
+/** Starts a Stockfish worker; resolves once it is ready for commands. */
+function startStockfish(options: Record<string, number>, onLine: (line: string) => void) {
+  const worker = new Worker(`${import.meta.env.BASE_URL}engine/stockfish.js`)
+  const ready = new Promise<void>((resolve, reject) => {
+    let isReady = false
+    worker.onmessage = (e: MessageEvent) => {
+      const line = String(e.data)
+      if (!isReady && line === 'readyok') {
+        isReady = true
+        resolve()
+      } else {
+        onLine(line)
+      }
+    }
+    worker.onerror = (e) => reject(e)
+  })
+  worker.postMessage('uci')
+  for (const [name, value] of Object.entries(options)) worker.postMessage(`setoption name ${name} value ${value}`)
+  worker.postMessage('isready')
+  return { worker, ready }
+}
+
+/** Reads one "info … score … pv …" line. Returns null for lines without a usable score. */
+function parseInfo(line: string, fen: string): EngineLine | null {
+  if (!line.startsWith('info')) return null
+  const parts = line.split(' ')
+  const pvAt = parts.indexOf('pv')
+  const scoreAt = parts.indexOf('score')
+  if (pvAt === -1 || scoreAt === -1 || parts.includes('lowerbound') || parts.includes('upperbound')) return null
+  const value = (key: string) => {
+    const i = parts.indexOf(key)
+    return i === -1 ? undefined : Number(parts[i + 1])
+  }
+  // UCI scores are from the side to move; store them from White's side.
+  const sign = fen.split(' ')[1] === 'b' ? -1 : 1
+  const score = sign * Number(parts[scoreAt + 2])
+  return {
+    multipv: value('multipv') ?? 1,
+    depth: value('depth') ?? 0,
+    pv: parts.slice(pvAt + 1),
+    ...(parts[scoreAt + 1] === 'mate' ? { mate: score } : { cp: score }),
+  }
+}
+
 type Listener = (state: EngineState) => void
 
+/** The live engine: analyses one position at a time and streams its lines. */
 class Engine {
   private worker: Worker | null = null
   private booting: Promise<void> | null = null
@@ -68,25 +118,11 @@ class Engine {
   }
 
   private boot(): Promise<void> {
-    this.booting ??= new Promise((resolve, reject) => {
-      const worker = new Worker(`${import.meta.env.BASE_URL}engine/stockfish.js`)
+    if (!this.booting) {
+      const { worker, ready } = startStockfish({ MultiPV: MULTI_PV, Hash: 32 }, (line) => this.handle(line))
       this.worker = worker
-      let ready = false
-      worker.onmessage = (e: MessageEvent) => {
-        const line = String(e.data)
-        if (!ready && line === 'readyok') {
-          ready = true
-          resolve()
-        } else {
-          this.handle(line)
-        }
-      }
-      worker.onerror = (e) => reject(e)
-      this.post('uci')
-      this.post(`setoption name MultiPV value ${MULTI_PV}`)
-      this.post('setoption name Hash value 32')
-      this.post('isready')
-    })
+      this.booting = ready
+    }
     return this.booting
   }
 
@@ -126,25 +162,9 @@ class Engine {
       return
     }
     // Ignore output from a search we have asked to stop.
-    if (!line.startsWith('info') || this.stopping || !this.state) return
-    const parts = line.split(' ')
-    const pvAt = parts.indexOf('pv')
-    const scoreAt = parts.indexOf('score')
-    if (pvAt === -1 || scoreAt === -1 || parts.includes('lowerbound') || parts.includes('upperbound')) return
-
-    const value = (key: string) => {
-      const i = parts.indexOf(key)
-      return i === -1 ? undefined : Number(parts[i + 1])
-    }
-    // UCI scores are from the side to move; store them from White's side.
-    const sign = this.state.fen.split(' ')[1] === 'b' ? -1 : 1
-    const score = sign * Number(parts[scoreAt + 2])
-    const entry: EngineLine = {
-      multipv: value('multipv') ?? 1,
-      depth: value('depth') ?? 0,
-      pv: parts.slice(pvAt + 1),
-      ...(parts[scoreAt + 1] === 'mate' ? { mate: score } : { cp: score }),
-    }
+    if (this.stopping || !this.state) return
+    const entry = parseInfo(line, this.state.fen)
+    if (!entry) return
     const lines = [...this.state.lines.filter((l) => l.multipv !== entry.multipv), entry].sort(
       (a, b) => a.multipv - b.multipv,
     )
@@ -174,16 +194,57 @@ class Engine {
 
 export const engine = new Engine()
 
+/** A separate engine for scoring many positions one after another (game review). */
+export class BatchEngine {
+  private worker: Worker | null = null
+  private booting: Promise<void> | null = null
+  private pending: { fen: string; last: EngineLine | null; resolve(line: EngineLine | null): void } | null = null
+
+  async evaluate(fen: string, depth: number): Promise<EngineLine | null> {
+    if (!this.booting) {
+      const { worker, ready } = startStockfish({ MultiPV: 1, Hash: 16 }, (line) => this.handle(line))
+      this.worker = worker
+      this.booting = ready
+    }
+    await this.booting
+    return new Promise((resolve) => {
+      this.pending = { fen, last: null, resolve }
+      this.worker!.postMessage(`position fen ${fen}`)
+      this.worker!.postMessage(`go depth ${depth}`)
+    })
+  }
+
+  private handle(line: string) {
+    const p = this.pending
+    if (!p) return
+    if (line.startsWith('bestmove')) {
+      this.pending = null
+      p.resolve(p.last)
+      return
+    }
+    const entry = parseInfo(line, p.fen)
+    if (entry) p.last = entry
+  }
+
+  terminate() {
+    this.worker?.terminate()
+    this.worker = null
+    this.booting = null
+    this.pending?.resolve(null)
+    this.pending = null
+  }
+}
+
 /** White's chance of winning (0–1), using the same curve as Lichess. */
-export function whiteWinChance(line?: EngineLine): number {
-  if (!line) return 0.5
-  if (line.mate !== undefined) return line.mate > 0 ? 1 : 0
-  const cp = Math.max(-1000, Math.min(1000, line.cp ?? 0))
+export function whiteWinChance(score?: Score): number {
+  if (!score) return 0.5
+  if (score.mate !== undefined) return score.mate > 0 ? 1 : 0
+  const cp = Math.max(-1000, Math.min(1000, score.cp ?? 0))
   return 1 / (1 + Math.exp(-0.00368208 * cp))
 }
 
-export function formatScore(line: EngineLine): string {
-  if (line.mate !== undefined) return `#${line.mate}`
-  const pawns = (line.cp ?? 0) / 100
+export function formatScore(score: Score): string {
+  if (score.mate !== undefined) return `#${score.mate}`
+  const pawns = (score.cp ?? 0) / 100
   return `${pawns > 0 ? '+' : ''}${pawns.toFixed(2)}`
 }
