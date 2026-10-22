@@ -31,7 +31,11 @@ Other scripts:
 
 ## Getting it on a phone
 
-A PWA has to be served over HTTPS once so it can install. Any static host works (GitHub Pages, Netlify, Cloudflare Pages). For a sub-folder such as GitHub Pages, build with `BASE_PATH=/chess-trainer/ npm run build`.
+A PWA has to be served over HTTPS once so it can install. Every push to `main` publishes the app to GitHub Pages through `.github/workflows/deploy.yml`, at:
+
+**https://jakeminehan.github.io/chess-trainer/**
+
+(One-time setup on GitHub: Settings → Pages → Source: GitHub Actions.) To host elsewhere, any static host works. Build with `BASE_PATH=/sub-folder/ npm run build` if the site lives in a sub-folder.
 
 Then open the site on the phone and:
 
