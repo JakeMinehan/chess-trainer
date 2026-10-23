@@ -5,7 +5,7 @@ import { BOARD_THEMES, PIECE_SETS, SOUND_SETS, setPref, usePrefs } from '../lib/
 import { preview } from '../lib/sound'
 import { toast } from '../lib/toast'
 import { checkForUpdate, reloadToUpdate, useUpdateReady } from '../lib/update'
-import { backUpNow, LAST_BACKUP_KEY, parseBackup, repertoirePgn, restoreBackup, saveFile } from '../storage/backup'
+import { backUpNow, describeRestore, LAST_BACKUP_KEY, parseBackup, repertoirePgn, restoreBackup, saveFile } from '../storage/backup'
 import { getMeta, listRepertoires, requestPersistence } from '../storage/db'
 
 function timeAgo(ms: number): string {
@@ -167,8 +167,7 @@ export function SettingsPage() {
   const restore = async (file: File) => {
     try {
       const backup = parseBackup(await file.text())
-      const { openings, moves } = await restoreBackup(backup)
-      toast(openings || moves ? `Restored ${openings} opening(s) and ${moves} extra move(s)` : 'Nothing new in that backup')
+      toast(describeRestore(await restoreBackup(backup)))
     } catch (e) {
       toast((e as Error).message)
     }
@@ -227,7 +226,7 @@ export function SettingsPage() {
       <section className="card">
         <h2>Backup</h2>
         <p>
-          Saves one file with all your openings. Keep it in Google Drive or Files.{' '}
+          Saves one file with your openings, practice history, puzzle rating and settings. Keep it in Google Drive or Files.{' '}
           <span className="muted">Last backup: {lastBackup ? timeAgo(lastBackup) : 'never'}.</span>
         </p>
         <div className="row">
@@ -243,7 +242,10 @@ export function SettingsPage() {
 
       <section className="card">
         <h2>Restore</h2>
-        <p>Adds everything from a backup file that isn't already here. Nothing on this device is deleted.</p>
+        <p>
+          Adds everything from a backup file that isn't already here, and keeps the newer history for each line and
+          puzzle. Nothing on this device is deleted. Your settings are set to the backup's.
+        </p>
         <button className="btn" onClick={() => fileInput.current?.click()}>
           <Icon name="upload" /> Restore from backup
         </button>

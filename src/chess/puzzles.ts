@@ -170,6 +170,9 @@ export interface PuzzleRating {
 
 export const START_RATING: PuzzleRating = { rating: 1500, games: 0 }
 
+/** Where your puzzle rating is stored (the meta store). */
+export const PUZZLE_RATING_KEY = 'puzzleRating'
+
 /** Elo-style update: moves faster for your first puzzles so it finds your level quickly. */
 export function nextRating(current: PuzzleRating, puzzleRating: number, solved: boolean): PuzzleRating {
   const k = current.games < 10 ? 60 : current.games < 40 ? 32 : 20

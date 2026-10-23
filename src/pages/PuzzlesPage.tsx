@@ -8,6 +8,7 @@ import { loadOpenings } from '../chess/openings'
 import { legalDests, playMove, positionInfo, turnOf, type Side } from '../chess/position'
 import { isDue, nextSchedule } from '../chess/practice'
 import {
+  PUZZLE_RATING_KEY,
   START_RATING,
   THEME_GROUPS,
   fromMyOpenings,
@@ -29,7 +30,6 @@ import { setPref, usePrefs } from '../lib/prefs'
 import { play, playMove as playMoveSound } from '../lib/sound'
 import { getMeta, listPuzzleStats, listRepertoires, savePuzzleStats, setMeta, type PuzzleStats } from '../storage/db'
 
-const RATING_KEY = 'puzzleRating'
 /** Missed puzzles come back until they've been solved this many times in a row. */
 const RETIRE_BOX = 3
 const NO_DESTS = new Map<Key, Key[]>()
@@ -88,7 +88,7 @@ export function PuzzlesPage() {
     loadPuzzles().then(setPuzzles, () => setFailedToLoad(true))
     Promise.all([listRepertoires(), loadOpenings()]).then(([reps, table]) => setTags(myOpeningTags(reps, table)))
     listPuzzleStats().then((s) => setStats(new Map(s.map((x) => [x.id, x]))))
-    getMeta<PuzzleRating>(RATING_KEY).then((r) => r && setRating(r))
+    getMeta<PuzzleRating>(PUZZLE_RATING_KEY).then((r) => r && setRating(r))
   }, [])
 
   const filter = (p: Puzzle) => inThemeGroup(p, prefs.puzzleTheme) && (!prefs.puzzleMine || fromMyOpenings(p, tags))
@@ -131,7 +131,7 @@ export function PuzzlesPage() {
     if (!rated) return null
     const updated = nextRating(rating, puzzle.rating, solved)
     setRating(updated)
-    await setMeta(RATING_KEY, updated)
+    await setMeta(PUZZLE_RATING_KEY, updated)
     return updated.rating - rating.rating
   }
 

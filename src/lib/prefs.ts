@@ -32,7 +32,8 @@ export interface Prefs {
 }
 
 const KEY = 'prefs'
-const defaults: Prefs = { board: 'green', pieces: 'staunty', sound: 'wood', puzzleTheme: 'all', puzzleMine: false }
+export const DEFAULT_PREFS: Prefs = { board: 'green', pieces: 'staunty', sound: 'wood', puzzleTheme: 'all', puzzleMine: false }
+const defaults = DEFAULT_PREFS
 
 function load(): Prefs {
   try {
@@ -57,7 +58,12 @@ function apply() {
 apply()
 
 export function setPref<K extends keyof Prefs>(key: K, value: Prefs[K]) {
-  prefs = { ...prefs, [key]: value }
+  setPrefs({ [key]: value })
+}
+
+/** Changes several settings at once (e.g. when restoring a backup). */
+export function setPrefs(changes: Partial<Prefs>) {
+  prefs = { ...prefs, ...changes }
   try {
     localStorage.setItem(KEY, JSON.stringify(prefs))
   } catch {
